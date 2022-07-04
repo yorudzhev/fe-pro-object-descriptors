@@ -8,14 +8,33 @@
  *
  * @returns string[]
  */
-export const getKeysByDescriptor = (object, descriptor) => {};
+export const getKeysByDescriptor = (object, descriptor) => {
+  let descriptedObject = Object.getOwnPropertyDescriptors(object);
+  let result = [];
+  for (let prop in descriptedObject) {
+    for (let subProp in descriptedObject[prop]) {
+      if (subProp === descriptor && descriptedObject[prop][subProp] === true) {
+        result.push(String(prop));
+      }
+    }
+  }
+  return result;
+};
 
 /**
  * Должен вернуть true если объект был заморожен каким-либо методом заморозки freeze, seal, preventExtensions иначе false
  * @param {Object} object
  * @returns {boolean}
  */
-export const isObjectAnyFrozen = (object) => {};
+export const isObjectAnyFrozen = (object) => {
+  if (
+    Object.isFrozen(object) ||
+    Object.isSealed(object) ||
+    !Object.isExtensible(object)
+  )
+    return `true`;
+  return `false`;
+};
 
 /**
  * Принимает объект и строку. Мы должны вернуть НОВЫЙ объект(копию оригинального), в котором
@@ -27,7 +46,19 @@ export const isObjectAnyFrozen = (object) => {};
  *
  * @returns {Object}
  */
-export const assignLockedValues = (object, propertyName) => {};
+export const assignLockedValues = (object, propertyName) => {
+  let clone = Object.assign({}, object);
+  for (let i in object) {
+    if (i === propertyName)
+      Object.defineProperty(clone, propertyName, {
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
+    clone[propertyName] = "null";
+  }
+  return clone;
+};
 
 /**
  * Принимает объект и возвращает его копию, только абсолютно замороженную
@@ -35,4 +66,12 @@ export const assignLockedValues = (object, propertyName) => {};
  * @param {Object} object
  * @returns {Object}
  */
-export const freezeAllInObject = (object) => {};
+export const freezeAllInObject = (object) => {
+  let clone = Object.defineProperties(
+    {},
+    Object.getOwnPropertyDescriptors(object)
+  );
+  Object.freeze(clone);
+  return clone;
+};
+ 
